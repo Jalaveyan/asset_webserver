@@ -1,0 +1,254 @@
+openapi: 3.0.3
+info:
+  title: Asset Service API
+  version: "1.0.0"
+  description: >
+    REST API для загрузки/скачивания данных с авторизацией.
+    Пользователь сначала получает токен через /api/auth, затем использует его
+    для закачки данных (POST /api/upload-asset/{assetName}) и скачивания данных (GET /api/asset/{assetName}).
+servers:
+  - url: http://localhost:8443
+    description: Локальный сервер (HTTP)
+paths:
+  /api/auth:
+    post:
+      summary: Аутентификация пользователя.
+      description: >
+        Принимает логин и пароль и возвращает авторизационный токен (session-id).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                login:
+                  type: string
+                password:
+                  type: string
+              required:
+                - login
+                - password
+      responses:
+        "200":
+          description: Успешная аутентификация.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: "2bdbbb11806cd18a90d730e61fbb54b5"
+        "401":
+          description: Неверный логин/пароль.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "invalid login/password"
+  /api/upload-asset/{assetName}:
+    post:
+      summary: Загрузка данных (закачка файла).
+      parameters:
+        - name: assetName
+          in: path
+          description: Имя файла (ресурса) для загрузки.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Сырые данные для загрузки (текст или бинарный файл).
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+              example: "Hello, Alice!"
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "200":
+          description: Данные успешно загружены.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+        "400":
+          description: Некорректный запрос.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "401":
+          description: Отсутствует или недействительный токен.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /api/asset/{assetName}:
+    get:
+      summary: Скачивание данных (получение файла).
+      parameters:
+        - name: assetName
+          in: path
+          description: Имя файла (ресурса) для скачивания.
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Возвращает содержимое файла.
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Hello, Alice!"
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "401":
+          description: Отсутствует или недействительный токен.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "404":
+          description: Файл не найден.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "not found"
+    delete:
+      summary: Удаление файла.
+      parameters:
+        - name: assetName
+          in: path
+          description: Имя файла для удаления.
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Файл успешно удалён.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+        "401":
+          description: Отсутствует или недействительный токен.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "403":
+          description: Доступ запрещён.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "404":
+          description: Файл не найден.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "not found"
+  /api/assets:
+    get:
+      summary: Получение списка файлов пользователя.
+      responses:
+        "200":
+          description: Возвращает список файлов.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  assets:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        created_at:
+                          type: string
+                          format: date-time
+        "401":
+          description: Отсутствует или недействительный токен.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /health:
+    get:
+      summary: Проверка состояния сервера
+      description: Возвращает статус "ok", если сервис работает корректно.
+      responses:
+        "200":
+          description: Сервер работает нормально.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+        "500":
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "internal server error"
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer

@@ -1,0 +1,55 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: asset_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: testdb
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d testdb || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  migrate:
+    image: postgres:15
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    environment:
+      PGPASSWORD: postgres
+    command: >
+      bash -c "
+      until pg_isready -h db -p 5432 -U postgres -d testdb; do
+        echo waiting for db;
+        sleep 2;
+      done;
+      psql -h db -U postgres -d testdb -f /docker-entrypoint-initdb.d/schema.sql
+      "
+
+  webserver:
+    build: .
+    container_name: asset_webserver
+    depends_on:
+      - migrate
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: testdb
+      APP_PORT: "8443"
+    ports:
+      - "8443:8443"
+
+volumes:
+  db_data:
