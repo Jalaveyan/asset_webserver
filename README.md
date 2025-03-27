@@ -16,24 +16,26 @@ Asset Service – это REST API для загрузки и скачивани�
 Структура проекта
 -----------------
 
+```text
 .
-├── api/                   
-│   ├── openapi.yaml       # OpenAPI спецификация API
+├── api/
+│   └── openapi.yaml       # OpenAPI спецификация API
 ├── certs/                 # TLS сертификаты (cert.pem, key.pem)
-├── cmd/                   
+├── cmd/
 │   └── main.go            # Точка входа приложения
 ├── internal/
-│   ├── config/            # Конфигурация (чтение .env, настройки)
-│   ├── db/                # Подключение к PostgreSQL через pgx
-│   ├── handlers/          # HTTP-обработчики (auth, asset, health)
-│   ├── models/            # Модели данных (User, Session, Asset)
-│   ├── repository/        # Репозитории для работы с БД
-│   └── service/           # Бизнес-логика (авторизация, валидация токенов)
-├── schema.sql             # SQL-скрипт для инициализации базы данных
-├── Dockerfile             # Dockerfile (multi-stage) для сборки приложения
-├── docker-compose.yaml    # Docker Compose для поднятия сервиса, БД и миграций
-├── .env                   # Файл с переменными окружения
-└── README.md              # Этот файл
+│   ├── config/            # Конфигурация
+│   ├── db/                # Подключение к базе данных
+│   ├── handlers/          # HTTP-обработчики
+│   ├── models/            # Модели данных
+│   ├── repository/        # Логика работы с БД
+│   └── service/           # Бизнес-логика (авторизация и т.п.)
+├── schema.sql             # SQL-скрипт для инициализации БД
+├── Dockerfile             # Dockerfile для сборки
+├── docker-compose.yaml    # Docker Compose для поднятия сервиса
+├── .env                   # Переменные окружения
+└── README.md              # Документация проекта
+````
 
 ------------------------------------------------------------
 
